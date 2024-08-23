@@ -10,19 +10,29 @@ import {
   UsePipes,
   UseFilters,
   ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TodoService } from './todo.service';
 import { CreateTodoDto, UpdateTodoDto } from './dto/todos-dto';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { Todo } from './todo.entity';
 import { ResponseDto } from 'src/shared/response-dto';
+import { JwtAuthGuard } from 'src/guard/jwt-auth.guard';
+import { UserRole } from 'src/user/entities/user.entity';
+import { Roles } from '../auth/decorator/roles.decorator';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('todos')
+@ApiTags('Todo')
 @UseFilters(AllExceptionsFilter)
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
   @Get()
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), JwtAuthGuard)
+  @Roles(UserRole.USER)
   async findAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,

@@ -7,7 +7,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+}
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -27,6 +30,9 @@ export class User {
 
   @Column()
   password: string;
+
+  @Column({ default: null })
+  verify: string;
 
   @OneToMany(() => Todo, (todo) => todo.user)
   todos: Todo[];
