@@ -5,12 +5,14 @@ import { JwtPayload } from '../guard/jwt-payload.interface';
 import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
 
+const scretKey = 'wewe';
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly userService: UserService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: 'wewe',
+      secretOrKey: scretKey,
     });
   }
 

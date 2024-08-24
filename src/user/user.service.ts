@@ -5,6 +5,10 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
+export interface findAllResponse {
+  message: string;
+  data: User[];
+}
 @Injectable()
 export class UserService {
   constructor(
@@ -22,7 +26,10 @@ export class UserService {
   async findAll(): Promise<User[]> {
     return this.userRepository.find();
   }
-
+  userWithoutPassword = {
+    ...User,
+    password: undefined,
+  };
   // Find one user by ID
   async findOne(id: number): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id } });
