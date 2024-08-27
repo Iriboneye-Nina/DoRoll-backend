@@ -1,4 +1,3 @@
-import { Todo } from 'src/todo/todo.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,10 +6,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-export enum UserRole {
-  USER = 'user',
-  ADMIN = 'admin',
-}
+import { Todo } from 'src/todo/todo.entity';
+import { ERole } from '../role.enum';
+import { ResetToken } from 'src/auth/entities/reset-token.entity';
+
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -31,11 +30,20 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ default: null })
-  verify: string;
+  @Column({ type: 'enum', enum: ERole, default: ERole.USER })
+  role: ERole;
+
+  @Column({ default: false })
+  isEmailVerified: boolean;
+
+  @Column({ default: false })
+  isPhoneVerified: boolean;
 
   @OneToMany(() => Todo, (todo) => todo.user)
   todos: Todo[];
+
+  @OneToMany(() => ResetToken, (resetToken) => resetToken.user)
+  resetTokens: ResetToken[];
 
   @CreateDateColumn()
   createdAt: Date;

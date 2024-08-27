@@ -9,20 +9,27 @@ config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // Enable CORS with options
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
+  });
 
-  app.setGlobalPrefix('API/v1');
+  // Set up global pipes and filters
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  const swaggerConfig = new DocumentBuilder()
+  // Swagger setup with auth
+  const config = new DocumentBuilder()
     .setTitle('Todo API')
     .setDescription('The Todo API description')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api', app, document, { customSiteTitle: 'dorollAPI' });
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 
   await app.listen(5000);
 }

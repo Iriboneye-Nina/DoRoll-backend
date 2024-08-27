@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { EStatus } from './status.enum';
 
 @Entity()
 export class Todo {
@@ -19,8 +20,8 @@ export class Todo {
   @Column()
   description: string;
 
-  @Column({ default: false })
-  isDone: boolean;
+  @Column({ type: 'enum', enum: EStatus, default: EStatus.PENDING })
+  status: EStatus;
 
   @Column({ nullable: true })
   deadline: Date;
