@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import typeorm from './config/typeorm';
 import { TodoModule } from './todo/todo.module';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -14,14 +14,14 @@ import { TodoModule } from './todo/todo.module';
       isGlobal: true,
       load: [typeorm],
     }),
+    TodoModule,
+    UserModule,
+    AuthModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) =>
         configService.get('typeorm'),
     }),
-    TodoModule,
-    AuthModule,
-    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

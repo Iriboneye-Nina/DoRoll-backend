@@ -1,34 +1,58 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  UseFilters,
+  UseGuards,
+  Put,
+  Body,
+  Req,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { AllExceptionsFilter } from 'src/todo/filters/all-exceptions.filter';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ERole } from './role.enum';
+import { Roles } from 'src/auth/roles.decorator';
+import { ResponseDto } from 'src/shared/response-dto';
 
-@ApiTags('Users')
-@Controller('users')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@ApiTags('User')
+@ApiBearerAuth()
+@Controller('user')
+@UseFilters(AllExceptionsFilter)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get()
-  @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'List of users' })
-  async findAll() {
-    return this.userService.findAll();
-  }
+  @Put('update-profile')
+  @Roles(ERole.USER)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async updateProfile(
+    @Req() req: any,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ): Promise<ResponseDto<any>> {
+    const userId = req.user.userId; // Retrieve userId from req.user
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a user by ID' })
-  @ApiResponse({ status: 200, description: 'User details' })
-  async findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
-  }
+    const updatedUser = await this.userService.updateProfile(
+      userId,
+      updateProfileDto,
+    );
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({
-    status: 201,
-    description: 'The user has been successfully created.',
-  })
-  async create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+    const result = {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      role: updatedUser.role,
+    };
+
+    return new ResponseDto(
+      200,
+      'success',
+      'Profile updated successfully',
+      result,
+    );
   }
 }
