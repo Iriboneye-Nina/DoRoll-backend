@@ -58,15 +58,14 @@ export class AuthService {
       ...userDto,
       password: hashedPassword,
     });
-    // Ensure this returns a single User object
+
     const savedUser = (await this.userRepository.save(
       newUser,
     )) as unknown as User;
 
-    // Save ResetToken after registering the user
     await this.saveResetToken(savedUser.id);
 
-    const activationToken = uuidv4(); // Generate a unique activation token
+    const activationToken = uuidv4();
     const activationUrl = `${process.env.FRONTEND_URL}/auth/verify-email?token=${activationToken}`;
 
     await this.emailService.sendEmail(
@@ -123,7 +122,7 @@ export class AuthService {
     const resetToken = this.resetTokenRepository.create({
       userId: user.id,
       token,
-      expiresAt: new Date(Date.now() + 3600000), // Token expires in 1 hour
+      expiresAt: new Date(Date.now() + 3600000),
     });
     await this.resetTokenRepository.save(resetToken);
 

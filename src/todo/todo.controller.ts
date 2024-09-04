@@ -6,7 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  Query,
   UsePipes,
   UseFilters,
   ValidationPipe,
@@ -20,29 +19,35 @@ import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { Todo } from './todo.entity';
 import { ResponseDto } from 'src/shared/response-dto';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ERole } from 'src/user/role.enum';
 import { Roles } from 'src/auth/roles.decorator';
-import { EStatus } from './status.enum';
 import { PositiveIntPipe } from 'src/common/positive-int.pipe';
 
-@UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiTags('Todos')
 @ApiBearerAuth()
 @Controller('todos')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @UseFilters(AllExceptionsFilter)
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
   @Get()
   @Roles(ERole.ADMIN)
-  async findAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('status') status?: EStatus,
-  ): Promise<ResponseDto<Todo[]>> {
-    const todos = await this.todoService.findAll(page, limit, status);
+  @ApiOperation({ summary: 'Get all todos' })
+  @ApiResponse({
+    status: 200,
+    description: 'Todos retrieved successfully',
+    type: [Todo],
+  })
+  async findAll(): Promise<ResponseDto<Todo[]>> {
+    const todos = await this.todoService.findAll();
     return new ResponseDto(
       200,
       'success',
@@ -51,21 +56,17 @@ export class TodoController {
     );
   }
 
-  @Get('')
+  @Get('my-todos')
   @Roles(ERole.USER)
-  async findMyTodos(
-    @Req() req: any,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('status') status?: EStatus,
-  ): Promise<ResponseDto<Todo[]>> {
+  @ApiOperation({ summary: 'Get todos for the authenticated user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Your todos retrieved successfully',
+    type: [Todo],
+  })
+  async findMyTodos(@Req() req: any): Promise<ResponseDto<Todo[]>> {
     const userId = req.user.userId;
-    const todos = await this.todoService.findUserTodos(
-      userId,
-      page,
-      limit,
-      status,
-    );
+    const todos = await this.todoService.findUserTodos(userId);
     return new ResponseDto(
       200,
       'success',
@@ -76,6 +77,13 @@ export class TodoController {
 
   @Get(':id')
   @Roles(ERole.USER, ERole.ADMIN)
+  @ApiOperation({ summary: 'Get a specific todo by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Todo retrieved successfully',
+    type: Todo,
+  })
+  @ApiResponse({ status: 404, description: 'Todo not found' })
   async findOne(
     @Req() req: any,
     @Param('id', PositiveIntPipe) id: number,
@@ -108,12 +116,17 @@ export class TodoController {
   @Post()
   @Roles(ERole.USER)
   @UsePipes(new ValidationPipe({ transform: true }))
+  @ApiOperation({ summary: 'Create a new todo' })
+  @ApiResponse({
+    status: 201,
+    description: 'Todo created successfully',
+    type: Todo,
+  })
   async create(
     @Req() req: any,
     @Body() createTodoDto: CreateTodoDto,
   ): Promise<ResponseDto<any>> {
     const userId = req.user.userId;
-
     const todo = await this.todoService.create(createTodoDto, userId);
     const result = {
       ...todo,
@@ -127,6 +140,13 @@ export class TodoController {
 
   @Put(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
+  @ApiOperation({ summary: 'Update an existing todo' })
+  @ApiResponse({
+    status: 200,
+    description: 'Todo updated successfully',
+    type: Todo,
+  })
+  @ApiResponse({ status: 404, description: 'Todo not found' })
   async update(
     @Req() req: any,
     @Param('id', PositiveIntPipe) id: number,
@@ -151,6 +171,9 @@ export class TodoController {
 
   @Delete(':id')
   @Roles(ERole.USER)
+  @ApiOperation({ summary: 'Delete an existing todo' })
+  @ApiResponse({ status: 200, description: 'Todo deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Todo not found' })
   async remove(
     @Req() req: any,
     @Param('id', PositiveIntPipe) id: number,

@@ -1,43 +1,71 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsEnum, IsNotEmpty, MinDate } from 'class-validator';
+import { IsDate, IsEnum, IsNotEmpty } from 'class-validator';
 import { EStatus } from '../status.enum';
 import { Type } from 'class-transformer';
 
 export class CreateTodoDto {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'The title of the todo item',
+    example: 'Finish project documentation',
+  })
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'The description of the todo item',
+    example: 'Complete the documentation for the project by end of the week',
+  })
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'The deadline for the todo item',
+    example: '2024-09-15T12:00:00Z',
+  })
   @IsNotEmpty()
   @IsDate()
-  @MinDate(new Date(), { message: 'Deadline must be a future date' })
   @Type(() => Date)
   deadline: Date;
 
-  @ApiProperty({ default: EStatus.PENDING })
-  @IsNotEmpty()
+  @ApiProperty({
+    description: 'The status of the todo item',
+    example: EStatus.PENDING,
+    default: EStatus.PENDING,
+  })
   status: EStatus;
 }
 
 export class UpdateTodoDto {
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: 'The title of the todo item',
+    example: 'Update project documentation',
+    required: false,
+  })
   @IsNotEmpty()
   title?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    description: 'The description of the todo item',
+    example: 'Update the documentation with recent changes',
+    required: false,
+  })
   @IsNotEmpty()
   description?: string;
 
+  @ApiProperty({
+    description: 'The deadline for the todo item',
+    example: '2024-09-20T12:00:00Z',
+    required: false,
+  })
   @IsDate()
-  @MinDate(new Date(), { message: 'Deadline must be a future date' })
   @Type(() => Date)
   deadline?: Date;
 
+  @ApiProperty({
+    description: 'The status of the todo item',
+    example: EStatus.COMPLETED,
+    required: false,
+  })
   @IsEnum(EStatus, { message: 'Status must be a valid enum value' })
   status?: EStatus;
 }
