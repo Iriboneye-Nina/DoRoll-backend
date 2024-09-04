@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsDate, IsNotEmpty } from 'class-validator';
 import { EStatus } from '../status.enum';
 import { Type } from 'class-transformer';
 
@@ -60,12 +60,4 @@ export class UpdateTodoDto {
   @IsDate()
   @Type(() => Date)
   deadline?: Date;
-
-  @ApiProperty({
-    description: 'The status of the todo item',
-    example: EStatus.COMPLETED,
-    required: false,
-  })
-  @IsEnum(EStatus, { message: 'Status must be a valid enum value' })
-  status?: EStatus;
 }
