@@ -92,7 +92,13 @@ export class TodoService {
       throw new InternalServerErrorException('Failed to create todo');
     }
   }
-
+  async markTaskAsDone(index: number, task: Partial<Todo>): Promise<Todo> {
+    await this.todoRepository.update(index, task);
+    const TaskMarked = await this.todoRepository.findOne({
+      where: { id: index },
+    });
+    return TaskMarked;
+  }
   // Update an existing todo for a specific user
   async update(id: number, todo: Partial<Todo>, userId: number): Promise<Todo> {
     const existingTodo = await this.findOne(id);
@@ -105,7 +111,6 @@ export class TodoService {
     const status = this.determineStatus(todo);
 
     Object.assign(existingTodo, { ...todo, status });
-
     try {
       return await this.todoRepository.save(existingTodo);
     } catch (error) {

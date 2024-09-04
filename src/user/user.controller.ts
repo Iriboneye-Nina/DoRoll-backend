@@ -4,9 +4,10 @@ import {
   UseGuards,
   Put,
   Body,
-  Req,
-  UsePipes,
-  ValidationPipe,
+  Request,
+  Param,
+  Get,
+  NotFoundException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -16,43 +17,65 @@ import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ERole } from './role.enum';
 import { Roles } from 'src/auth/roles.decorator';
-import { ResponseDto } from 'src/shared/response-dto';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiTags('User')
 @ApiBearerAuth()
-@Controller('user')
 @UseFilters(AllExceptionsFilter)
+@Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    // Inject your UserRepository or appropriate service here if needed
+  ) {}
 
-  @Put('update-profile')
+  @Get(':id')
   @Roles(ERole.USER)
-  @UsePipes(new ValidationPipe({ transform: true }))
+  async getUser(
+    @Param('id') id: string,
+  ): Promise<{ message: string; data?: any }> {
+    try {
+      const numericId = parseInt(id, 10); // Convert the string to a number
+
+      if (isNaN(numericId)) {
+        throw new NotFoundException(`Invalid ID: ${id}`);
+      }
+
+      const user = await this.userService.getUser(numericId); // Adjust this to your service method
+      if (!user) {
+        throw new NotFoundException(`User with ID ${numericId} not found`);
+      }
+
+      return { message: 'User successfully retrieved', data: user };
+    } catch (error) {
+      console.log(error);
+      throw error; // Or handle it and return an appropriate response
+    }
+  }
+
+  @Put('update/:id')
+  @Roles(ERole.USER)
   async updateProfile(
-    @Req() req: any,
+    @Param('id') id: string,
+    @Request() req: any,
     @Body() updateProfileDto: UpdateProfileDto,
-  ): Promise<ResponseDto<any>> {
-    const userId = req.user.userId; // Retrieve userId from req.user
-
-    const updatedUser = await this.userService.updateProfile(
-      userId,
-      updateProfileDto,
-    );
-
-    const result = {
-      id: updatedUser.id,
-      email: updatedUser.email,
-      firstName: updatedUser.firstName,
-      lastName: updatedUser.lastName,
-      role: updatedUser.role,
-    };
-
-    return new ResponseDto(
-      200,
-      'success',
-      'Profile updated successfully',
-      result,
-    );
+  ): Promise<{ message: string }> {
+    const userId = req.user.userId.toString();
+    console.log(userId);
+    try {
+      const user = await this.userService.updateProfile(
+        userId,
+        updateProfileDto,
+      );
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      return {
+        message: 'User profile data successfully saved',
+      };
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 }

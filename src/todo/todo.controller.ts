@@ -12,6 +12,9 @@ import {
   UseGuards,
   Req,
   ForbiddenException,
+  HttpStatus,
+  HttpException,
+  NotFoundException,
 } from '@nestjs/common';
 import { TodoService } from './todo.service';
 import { CreateTodoDto, UpdateTodoDto } from './dto/todos-dto';
@@ -29,6 +32,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { ERole } from 'src/user/role.enum';
 import { Roles } from 'src/auth/roles.decorator';
 import { PositiveIntPipe } from 'src/common/positive-int.pipe';
+import { MarkTodoDto } from './dto/status.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @ApiTags('Todos')
 @ApiBearerAuth()
@@ -36,6 +41,7 @@ import { PositiveIntPipe } from 'src/common/positive-int.pipe';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @UseFilters(AllExceptionsFilter)
 export class TodoController {
+  todoRepository: any;
   constructor(private readonly todoService: TodoService) {}
 
   @Get()
@@ -168,7 +174,40 @@ export class TodoController {
       result,
     );
   }
-
+  @Put('mark/:id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Roles(ERole.USER)
+  async markingTask(
+    @Param('id') id: string,
+    @Body() marking: MarkTodoDto,
+  ): Promise<{ message: string }> {
+    const taskId = parseInt(id, 10);
+    try {
+      const task = await this.todoRepository.findOne({ where: { id: taskId } });
+      if (!task) {
+        throw new NotFoundException(`Task with ID ${id} not found`);
+      }
+      await this.todoRepository.update(id, marking);
+      const updatedtask = await this.todoRepository.findOne({
+        where: { id: taskId },
+      });
+      if (!updatedtask) {
+        throw new HttpException(
+          'Failed to mark',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      return {
+        message: `Task with ID ${id} successfully marked as done`,
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Failed to mark task',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
   @Delete(':id')
   @Roles(ERole.USER)
   @ApiOperation({ summary: 'Delete an existing todo' })
