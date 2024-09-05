@@ -13,7 +13,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      'https://doroll-frontend-y7i4.vercel.app/',
+      'https://doroll-frontend-y7i4.vercel.app',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization',
@@ -37,3 +37,4 @@ async function bootstrap() {
   await app.listen(5000);
 }
 bootstrap();
+
