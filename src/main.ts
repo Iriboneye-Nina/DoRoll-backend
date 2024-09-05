@@ -11,7 +11,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   // Enable CORS with options
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://doroll-backend-5.onrender.com'],
+    origin: [
+      'http://localhost:3000',
+      'https://doroll-frontend-y7i4.vercel.app/',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization',
   });
