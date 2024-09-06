@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNotEmpty } from 'class-validator';
+import { IsDate, IsNotEmpty, IsEnum } from 'class-validator';
 import { EStatus } from '../status.enum';
 import { Type } from 'class-transformer';
 
@@ -32,32 +32,6 @@ export class CreateTodoDto {
     example: EStatus.PENDING,
     default: EStatus.PENDING,
   })
+  @IsEnum(EStatus)
   status: EStatus;
-}
-
-export class UpdateTodoDto {
-  @ApiProperty({
-    description: 'The title of the todo item',
-    example: 'Update project documentation',
-    required: false,
-  })
-  @IsNotEmpty()
-  title?: string;
-
-  @ApiProperty({
-    description: 'The description of the todo item',
-    example: 'Update the documentation with recent changes',
-    required: false,
-  })
-  @IsNotEmpty()
-  description?: string;
-
-  @ApiProperty({
-    description: 'The deadline for the todo item',
-    example: '2024-09-20T12:00:00Z',
-    required: false,
-  })
-  @IsDate()
-  @Type(() => Date)
-  deadline?: Date;
 }

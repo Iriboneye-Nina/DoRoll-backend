@@ -11,12 +11,14 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AllExceptionsFilter } from 'src/todo/filters/all-exceptions.filter';
 import { RolesGuard } from 'src/auth/guard/roles.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ERole } from './role.enum';
 import { Roles } from 'src/auth/roles.decorator';
+import { PasswordDto } from './dto/password.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiTags('User')
@@ -72,6 +74,35 @@ export class UserController {
       }
       return {
         message: 'User profile data successfully saved',
+      };
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+  @Put('updatePassword/:id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Roles(ERole.USER)
+  @ApiResponse({ status: 200, description: 'Password updated successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 401, description: 'Invalid current password' })
+  async updatePassword(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Body() updatePasswordDto: PasswordDto,
+  ): Promise<{ message: string }> {
+    const userId = req.user.userId.toString();
+    try {
+      const user = await this.userService.updatePassword(
+        userId,
+        updatePasswordDto,
+      );
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      return {
+        message: 'User password successfully seved',
       };
     } catch (error) {
       console.log(error);

@@ -1,8 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { PasswordDto } from './dto/password.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -18,16 +24,54 @@ export class UserService {
   async updateProfile(
     userId: number,
     updateProfileDto: UpdateProfileDto,
-  ): Promise<User> {
+  ): Promise<{ message: string; user: User }> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
     await this.userRepository.update({ id: userId }, updateProfileDto);
-    return this.userRepository.findOne({ where: { id: userId } });
+    const updatedUser = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    return {
+      message: 'Profile updated successfully',
+      user: updatedUser,
+    };
   }
 
   async getUser(id: number): Promise<User | null> {
     return await this.userRepository.findOneBy({ id });
+  }
+
+  async updatePassword(
+    userId: number,
+    updatePasswordDto: PasswordDto,
+  ): Promise<{ message: string; user: User }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      updatePasswordDto.currentPassword,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid current password');
+    }
+
+    const hashedPassword = await bcrypt.hash(updatePasswordDto.newPassword, 10);
+    await this.userRepository.update(
+      { id: userId },
+      { password: hashedPassword },
+    );
+
+    const updatedUser = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    return {
+      message: 'Password updated successfully',
+      user: updatedUser,
+    };
   }
 }
