@@ -26,10 +26,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 @UseFilters(AllExceptionsFilter)
 @Controller('user')
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    // Inject your UserRepository or appropriate service here if needed
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @Get(':id')
   @Roles(ERole.USER)
@@ -37,13 +34,13 @@ export class UserController {
     @Param('id') id: string,
   ): Promise<{ message: string; data?: any }> {
     try {
-      const numericId = parseInt(id, 10); // Convert the string to a number
+      const numericId = parseInt(id, 10);
 
       if (isNaN(numericId)) {
         throw new NotFoundException(`Invalid ID: ${id}`);
       }
 
-      const user = await this.userService.getUser(numericId); // Adjust this to your service method
+      const user = await this.userService.getUser(numericId);
       if (!user) {
         throw new NotFoundException(`User with ID ${numericId} not found`);
       }
@@ -51,7 +48,7 @@ export class UserController {
       return { message: 'User successfully retrieved', data: user };
     } catch (error) {
       console.log(error);
-      throw error; // Or handle it and return an appropriate response
+      throw error;
     }
   }
 
@@ -63,7 +60,7 @@ export class UserController {
     @Body() updateProfileDto: UpdateProfileDto,
   ): Promise<{ message: string }> {
     const userId = req.user.userId.toString();
-    console.log(userId);
+
     try {
       const user = await this.userService.updateProfile(
         userId,
