@@ -50,4 +50,13 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+  @Column({
+    default:
+      'https://res.cloudinary.com/dygbozwbw/image/upload/v1725460970/pxwbhozk85crzgevdj0q.png',
+  })
+  profileImage: string;
+  @Column({ nullable: true })
+  resetPasswordToken: string;
+  @Column({ nullable: true })
+  resetPasswordExpire: Date;
 }
