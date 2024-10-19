@@ -8,8 +8,20 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { PasswordDto } from './dto/password.dto';
-import * as bcrypt from 'bcrypt';
+import { v2 as cloudinary } from 'cloudinary';
 
+import * as bcrypt from 'bcrypt';
+type MulterFile = {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  destination: string;
+  filename: string;
+  path: string;
+  buffer: Buffer;
+};
 @Injectable()
 export class UserService {
   constructor(
@@ -73,5 +85,18 @@ export class UserService {
       message: 'Password updated successfully',
       user: updatedUser,
     };
+  }
+  async uploadImage(file: MulterFile): Promise<any> {
+    if (!file || !file.buffer) {
+      throw new Error('No file provided or file buffer is undefined');
+    }
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream((error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        })
+        .end(file.buffer);
+    });
   }
 }
